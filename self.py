@@ -8,7 +8,7 @@ if "logged_in" not in st.session_state :
     st.session_state.username = None
 
 if not st.session_state.logged_in : #if not logged in then exe
-    st.title("CRYPTIC")
+    st.title("CRYPTIX")
     st.subheader("Login in to your account")
     user = st.text_input("Username")
     password = st.text_input("Password", type="password")
@@ -33,7 +33,7 @@ if not st.session_state.logged_in : #if not logged in then exe
             st.success("New User CREATED")
 
 else :
-    st.title("CRYPTIC")
+    st.title("CRYPTIX")
     st.sidebar.title(f"WELCOME, {st.session_state.username}")
     if st.sidebar.button("Logout"):
         st.session_state.logged_in = False
