@@ -9,8 +9,11 @@ __pycache__/
 *.pyc
 
 # Local Data/Vault
-vault.json
+*json
 *.encrypted
 
 # VS Code settings
 .vscode/
+
+#db files
+*.db
