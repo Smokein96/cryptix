@@ -34,6 +34,7 @@ if st.session_state.user is None or st.session_state.user.log_status is False: #
         else:
             st.warning("User Already Exists")
 
+# NEW PAGE
 else:
     st.title("CRYPTIX")
     st.sidebar.title(f"WELCOME, {st.session_state.user.username}")
@@ -44,6 +45,7 @@ else:
 
     tab1, tab2, tab3 = st.tabs(["🔒 Encrypt", "🔓 Decrypt", "📜 My Files"])
 
+    # ENCRYPT
     with tab1:
         st.subheader("Encrypt New File")
         up_file = st.file_uploader("Upload file", key="enc_uploader")
@@ -51,40 +53,61 @@ else:
         col1,col2 = st.columns(2)
 
         if col1.button("Encrypt & Store Key") and up_file:
+            try :
+                (encrypted_content,file_key) = st.session_state.user.encrypt(up_file)
 
-            file_key = Fernet.generate_key()
-            f = Fernet(file_key)
-            encrypted_content = f.encrypt(up_file.read())
+                sql_mod.save_file(st.session_state.user.username, up_file.name, file_key.decode())
+                st.success(f"Key for {up_file.name} saved to your vault!")
+                col2.download_button(f"Download {up_file.name}.encrypted", encrypted_content, f"{up_file.name}.encrypted")
+                st.code(file_key.decode(), language="plaintext")
 
-            sql_mod.save_file(st.session_state.user.username, up_file.name, file_key.decode())
-            st.success(f"Key for {up_file.name} saved to your vault!")
-            col2.download_button(f"Download {up_file.name}.encrypted", encrypted_content, f"{up_file.name}.encrypted")
-
+            except (Exception) as error:
+                st.error(str(error))
     
+    #DECRYPT
     with tab2:
         st.subheader("Decrypt File")
-        dec_file = st.file_uploader("Upload .encrypted file")
-        col1,col2 = st.columns(2)
+        dec_file = st.file_uploader("Upload .encrypted file", key="dec_uploader")
 
-        if col1.button("Decrypt with Stored Key") and dec_file:
+        if dec_file:
             original_name = dec_file.name.replace(".encrypted", "")
-            
-            key = sql_mod.get_key(st.session_state.user.username, original_name)
-            
-            if key is not None:
-                enc_key = key.encode()
-                f = Fernet(enc_key)
+            col1, col2 = st.columns(2)
 
-                try:
-                    decrypted_data = f.decrypt(dec_file.read())
-                    st.success("Succesfully Decrypted")
-                    col2.download_button(label="Download Original",data=decrypted_data,file_name=original_name
-                    )
-                except Exception:
-                    st.error("Decryption failed. Data may be corrupted.")
-            else:
-                st.error("No key found for this file in your vault.")
+            tab1, tab2 = col1.tabs(["Stored Key", "Manual Key"])
 
+            # STORED KEY
+            with tab1:
+
+                st.write("Use key from your vault:")
+                if st.button("Decrypt with Stored Key"):
+                    try:
+
+                        dec_file.seek(0)  # Reset file pointer
+                        key = sql_mod.get_key(st.session_state.user.username, original_name)
+                        decrypted_data = st.session_state.user.decrypt(dec_file, key)
+                        st.success("File decrypted successfully!")
+                        st.download_button(f"Download {original_name}", decrypted_data, f"{original_name}", key="stored_key_dl") # need key id to seperate the 2 download buttons
+                    except (ValueError, RuntimeError, Exception) as error:
+                        st.error(str(error))
+
+            # MANUAL KEY
+            with tab2:
+                st.write("Use a manual key:")
+                manual_key = st.text_input("Enter Key")
+                if st.button("Decrypt with Manual Key"):
+                    if manual_key:
+                        try:
+
+                            dec_file.seek(0)
+                            decrypted_data = st.session_state.user.decrypt(dec_file, manual_key)
+                            st.success("File decrypted successfully!")
+                            st.download_button(f"Download {original_name}", decrypted_data, f"{original_name}", key="manual_key_dl")
+                        
+                        except (ValueError, RuntimeError, Exception) as error:
+                            st.error(str(error))
+                    else:
+                        st.warning("Please enter a manual key.")
+            
     with tab3:
         st.subheader("Your Secured Files")
         file = sql_mod.get_files(st.session_state.user.username)
