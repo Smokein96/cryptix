@@ -1,10 +1,20 @@
 import sqlite3
 
+def est_conn(func):
+    def Wrapper(*args, **kwargs):
+        conn = sqlite3.connect("test.db")
+        cur = conn.cursor()
+        # Execute the function once and store its return value
+        result = func(cur, *args, **kwargs)
+        conn.commit()
+        conn.close()
+        # Return the stored value
+        return result
+    return Wrapper
 
 
-def check_db():
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor()
+@est_conn
+def check_db(cur):
     cur.execute('''
         CREATE TABLE IF NOT EXISTS user (
         username TEXT UNIQUE NOT NULL,
@@ -19,51 +29,35 @@ def check_db():
         key TEXT NOT NULL
         )
     ''')
-    conn.commit()
-    conn.close()
 
-def check_login(username, password):
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor() 
+@est_conn
+def check_login(cur, username, password):
     cur.execute("SELECT * FROM user WHERE username = ? AND password = ?", (username, password))
     user = cur.fetchone() #retrieves the first matching row found If no user matches the credentials, user becomes None
-    conn.close()
     return user is not None 
 
-def check_exist(username):
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor()
+@est_conn
+def check_exist(cur, username):
     cur.execute("SELECT * FROM user WHERE username = ?", (username,))
     user = cur.fetchone()
-    conn.close()
     return user is not None # true if user exists
 
-def register_user(username, password):
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor()
+@est_conn
+def register_user(cur, username, password):
     cur.execute("INSERT INTO user (username,password) VALUES (?,?)", (username, password))
-    conn.commit()
-    conn.close()
 
-def save_file(username, filename, key):
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor()
+@est_conn
+def save_file(cur, username, filename, key):
     cur.execute("INSERT INTO files (username, filename, key) VALUES (?,?,?)", (username, filename, key))
-    conn.commit()
-    conn.close()
 
-def get_files(username):
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor()
+@est_conn
+def get_files(cur, username):
     cur.execute("SELECT * FROM files WHERE username = ?", (username,))
     files = cur.fetchall()
-    conn.close()
     return files
 
-def get_key(username, filename):
-    conn = sqlite3.connect("test.db")
-    cur = conn.cursor()
+@est_conn
+def get_key(cur, username, filename):
     cur.execute("SELECT key FROM files WHERE username = ? AND filename = ?", (username, filename))
     key = cur.fetchone()
-    conn.close()
-    return key[0] if key else None
+    return key[0] if key else None #ftch1 returns a string in a tuple
