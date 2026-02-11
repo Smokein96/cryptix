@@ -12,7 +12,6 @@ def est_conn(func):
         return result
     return Wrapper
 
-
 @est_conn
 def check_db(cur):
     cur.execute('''

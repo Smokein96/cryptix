@@ -81,8 +81,6 @@ else:
                 st.write("Use key from your vault:")
                 if st.button("Decrypt with Stored Key"):
                     try:
-
-                        dec_file.seek(0)  # Reset file pointer
                         key = sql_mod.get_key(st.session_state.user.username, original_name)
                         decrypted_data = st.session_state.user.decrypt(dec_file, key)
                         st.success("File decrypted successfully!")
@@ -97,8 +95,6 @@ else:
                 if st.button("Decrypt with Manual Key"):
                     if manual_key:
                         try:
-
-                            dec_file.seek(0)
                             decrypted_data = st.session_state.user.decrypt(dec_file, manual_key)
                             st.success("File decrypted successfully!")
                             st.download_button(f"Download {original_name}", decrypted_data, f"{original_name}", key="manual_key_dl")
@@ -112,8 +108,10 @@ else:
         st.subheader("Your Secured Files")
         file = sql_mod.get_files(st.session_state.user.username)
         if file:
+            col1,col2 = st.columns(2)
             for filename in file:
-                st.write(f"{filename[2]}")
+                col1.write(f"{filename[2]}")
+              
         else:
             st.info("No files registered yet.")
                 

@@ -12,6 +12,7 @@ class obj :
         try:
             file_key = Fernet.generate_key()
             f = Fernet(file_key)
+            up_file.seek(0)
             encrypted_content = f.encrypt(up_file.read())
             return(encrypted_content,file_key)
         except(Exception):
@@ -25,6 +26,7 @@ class obj :
             enc_key = key.encode()
             f = Fernet(enc_key)
             
+            dec_file.seek(0)
             decrypted_data = f.decrypt(dec_file.read())
             return decrypted_data # Success! Returns bytes.
     
