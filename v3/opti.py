@@ -1,7 +1,6 @@
-from user import obj
 import streamlit as st
 import sql_mod
-from cryptography.fernet import Fernet
+from user import obj
 
 # Initialize db only once
 sql_mod.check_db()
@@ -61,7 +60,7 @@ else:
                 col2.download_button(f"Download {up_file.name}.encrypted", encrypted_content, f"{up_file.name}.encrypted")
                 st.code(file_key.decode(), language="plaintext")
 
-            except (Exception) as error:
+            except Exception as error:
                 st.error(str(error))
     
     #DECRYPT
